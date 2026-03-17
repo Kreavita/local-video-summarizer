@@ -12,8 +12,9 @@ A CLI tool that downloads audio from YouTube videos, transcribes using Whisper, 
 ## Requirements
 
 - Python 3.10+
-- FFmpeg (for audio extraction)
+- FFmpeg (for audio processing)
 - Ollama running locally or remote
+- For GPU acceleration (recommended): NVIDIA GPU with CUDA
 
 ## Installation
 
@@ -47,12 +48,23 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-The package is installed in editable mode, so you can run it from anywhere.
-
 4. Configure your environment:
 ```bash
 cp .env.example .env
 # Edit .env with your Ollama endpoint and other settings
+```
+
+### GPU Support (Recommended)
+
+For NVIDIA GPU acceleration with CUDA 11.8 or 12.1:
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+```
+
+Or install with the `cuda` extra:
+```bash
+pip install -e .[cuda]
 ```
 
 ## Configuration
@@ -117,6 +129,7 @@ summarizer/
 │       └── config.py       # Configuration handling
 ├── setup.sh                # Virtual environment setup (Linux/macOS)
 ├── setup.bat               # Virtual environment setup (Windows)
+├── pyproject.toml          # Package configuration
 ├── .env.example            # Environment template
 ├── requirements.txt        # Python dependencies
 └── README.md

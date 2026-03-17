@@ -11,10 +11,14 @@ requires-python = ">=3.10"
 dependencies = [
     "yt-dlp",
     "openai-whisper",
+    "torch",
     "ollama",
     "python-dotenv",
     "requests",
 ]
+
+[project.optional-dependencies]
+cuda = ["torch --index-url https://download.pytorch.org/whl/cu121"]
 
 [project.scripts]
 summarizer = "summarizer.cli:main"

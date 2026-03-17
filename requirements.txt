@@ -1,6 +1,7 @@
+--index-url https://download.pytorch.org/whl/cu121
 yt-dlp
 openai-whisper
+torch
 ollama
 python-dotenv
-argparse
 requests
