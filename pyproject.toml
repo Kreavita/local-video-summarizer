@@ -12,7 +12,6 @@ dependencies = [
     "yt-dlp",
     "openai-whisper",
     "torch",
-    "ollama",
     "python-dotenv",
     "requests",
 ]
