@@ -3,6 +3,9 @@ import torch
 from pathlib import Path
 
 
+_model = None
+
+
 def check_cuda() -> str:
     """Check CUDA availability and return device info."""
     if torch.cuda.is_available():
@@ -35,8 +38,19 @@ def save_transcript(video_id: str, transcript: str) -> None:
 
 def transcribe_audio(audio_path: str, model_size: str = "base") -> str:
     """Transcribe audio file using Whisper."""
+    global _model
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {check_cuda()}")
-    model = whisper.load_model(model_size, device=device)
-    result = model.transcribe(audio_path, verbose=False)
+    _model = whisper.load_model(model_size, device=device)
+    result = _model.transcribe(audio_path, verbose=False)
     return result["text"]
+
+
+def unload_model() -> None:
+    """Unload Whisper model from memory/VRAM."""
+    global _model
+    if _model is not None:
+        del _model
+        _model = None
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

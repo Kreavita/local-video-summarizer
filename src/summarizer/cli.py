@@ -20,36 +20,30 @@ def main():
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        video_id = downloader.get_video_id(args.url)
+        metadata = downloader.get_video_metadata(args.url)
         
+        transcript = None
         if not args.no_cache:
-            cached = transcriber.load_cached_transcript(video_id)
-            if cached:
-                print("Using cached transcript.")
-                transcript = cached
-                metadata = downloader.get_video_metadata(args.url)
-            else:
-                print("Downloading audio...")
-                audio_path, metadata, video_id = downloader.download_audio(args.url, temp_dir)
-                print(f"Audio downloaded: {audio_path}")
-                print(f"Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}")
-
-                print("Transcribing with Whisper...")
-                transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
-                transcriber.save_transcript(video_id, transcript)
-                print("Transcription complete and cached.")
-                if not args.keep_audio:
-                    os.remove(audio_path)
-                    print("Audio file removed.")
+            transcript = transcriber.load_cached_transcript(metadata['id'])
+                    
+        if transcript:
+            print("Using cached transcript.")
         else:
             print("Downloading audio...")
-            audio_path, metadata, video_id = downloader.download_audio(args.url, temp_dir)
+            audio_path, metadata = downloader.download_audio(args.url, temp_dir)
             print(f"Audio downloaded: {audio_path}")
             print(f"Video: {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}")
 
             print("Transcribing with Whisper...")
             transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
-            print("Transcription complete.")
+            transcriber.unload_model()
+            print("Whisper model unloaded from VRAM.")
+            
+            if not args.no_cache:
+                transcriber.save_transcript(metadata['id'], transcript)
+                print("Transcription complete and cached.")
+            else:
+                print("Transcription complete.")
 
             if not args.keep_audio:
                 os.remove(audio_path)
