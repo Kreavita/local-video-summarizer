@@ -40,7 +40,30 @@ def run_ui():
             try:
                 with tempfile.TemporaryDirectory() as temp_dir:
                     metadata = downloader.get_video_metadata(url)
-                    st.info(f"📺 {metadata.get('title', 'N/A')} by {metadata.get('channel', 'N/A')}")
+                    video_id = metadata['id']
+                    thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg"
+
+                    duration_sec = metadata.get('duration', 0)
+                    minutes, seconds = divmod(duration_sec, 60)
+                    hours, minutes = divmod(minutes, 60)
+                    duration_str = f"{hours}h {minutes}m {seconds}s" if hours else f"{minutes}m {seconds}s"
+
+                    view_count = metadata.get('view_count', 0)
+                    view_str = f"{view_count:,}" if view_count else "N/A"
+
+                    upload_date = metadata.get('upload_date', '')
+                    if upload_date and len(upload_date) == 8:
+                        upload_date = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}"
+
+                    col_thumb, col_info = st.columns([1, 1.2])
+                    with col_thumb:
+                        st.image(thumbnail_url, use_container_width=True)
+                    with col_info:
+                        st.markdown(f"**{metadata.get('title', 'N/A')}**")
+                        st.markdown(f"*{metadata.get('channel', 'N/A')}*")
+                        st.markdown(f"Duration: {duration_str} ♦ Views: {view_str}")
+                        if upload_date:
+                            st.markdown(f"Uploaded: {upload_date}")
 
                     transcript = transcriber.load_cached_transcript(metadata['id'])
 

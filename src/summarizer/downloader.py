@@ -14,6 +14,11 @@ def get_video_metadata(url: str) -> dict:
         'channel': info.get('channel', ''),
         'upload_date': info.get('upload_date', ''),
         'description': info.get('description', ''),
+        'duration': info.get('duration', 0),
+        'view_count': info.get('view_count', 0),
+        'like_count': info.get('like_count', 0),
+        'categories': info.get('categories', []),
+        'tags': info.get('tags', []),
     }
     
     return metadata
@@ -38,6 +43,11 @@ def download_audio(url: str, output_path: str = ".") -> tuple[str, dict]:
             'channel': info.get('channel', ''),
             'upload_date': info.get('upload_date', ''),
             'description': info.get('description', ''),
+            'duration': info.get('duration', 0),
+            'view_count': info.get('view_count', 0),
+            'like_count': info.get('like_count', 0),
+            'categories': info.get('categories', []),
+            'tags': info.get('tags', []),
         }
     
     return audio_file, metadata
