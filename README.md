@@ -56,15 +56,16 @@ cp .env.example .env
 
 ### GPU Support (Recommended)
 
-For NVIDIA GPU acceleration with CUDA 11.8 or 12.1:
+For NVIDIA GPU acceleration, install torch with CUDA support :
 
 ```bash
+pip uninstall torch
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 
-Or install with the `cuda` extra:
+Verify GPU is available:
 ```bash
-pip install -e .[cuda]
+python check_cuda.py
 ```
 
 ## Configuration
