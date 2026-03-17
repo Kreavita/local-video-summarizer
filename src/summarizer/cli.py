@@ -27,7 +27,7 @@ def main():
             transcript = transcriber.load_cached_transcript(metadata['id'])
                     
         if transcript:
-            print("Using cached transcript.")
+            print(f"Using cached transcript. (length: {len(transcript)})")
         else:
             print("Downloading audio...")
             audio_path, metadata = downloader.download_audio(args.url, temp_dir)

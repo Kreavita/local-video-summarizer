@@ -20,17 +20,6 @@ def format_metadata(metadata: dict) -> str:
     return '\n'.join(lines)
 
 
-def unload_model(model: str) -> None:
-    """Unload Ollama model from memory."""
-    try:
-        requests.delete(
-            f"{OLLAMA_BASE_URL}/api/delete",
-            json={"model": model}
-        )
-    except Exception:
-        pass
-
-
 def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = None) -> str:
     """Send transcript to Ollama and get summary."""
     model = model or OLLAMA_MODEL
@@ -42,22 +31,20 @@ def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = N
     else:
         full_prompt = f"{prompt}\n\n{text}"
 
-    try:
-        response = requests.post(
-            f"{OLLAMA_BASE_URL}/api/generate",
-            json={
-                "model": model,
-                "prompt": full_prompt,
-                "stream": False,
-                "options": {
-                    "num_ctx": CONTEXT_WINDOW
-                }
+    response = requests.post(
+        f"{OLLAMA_BASE_URL}/api/generate",
+        json={
+            "model": model,
+            "prompt": full_prompt,
+            "stream": False,
+            "keep_alive": 0,
+            "options": {
+                "num_ctx": CONTEXT_WINDOW
             }
-        )
+        }
+    )
 
-        result = response.json()
-        summary = result.get("response", "")
-    finally:
-        unload_model(model)
+    result = response.json()
+    summary = result.get("response", "")
     
     return summary
