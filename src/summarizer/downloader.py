@@ -2,13 +2,17 @@ import yt_dlp
 import os
 
 
-def get_video_info(url: str) -> dict:
-    """Get video metadata."""
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': os.path.join('.', '%(id)s.%(ext)s'),
-    }
+def get_video_id(url: str) -> str:
+    """Extract video ID from URL without downloading."""
+    ydl_opts = {'format': 'bestaudio/best'}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        return info['id']
 
+
+def get_video_metadata(url: str) -> dict:
+    """Get video metadata."""
+    ydl_opts = {'format': 'bestaudio/best'}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         
@@ -22,8 +26,8 @@ def get_video_info(url: str) -> dict:
     return metadata
 
 
-def download_audio(url: str, output_path: str = ".") -> tuple[str, dict]:
-    """Download audio from YouTube video and return audio path + metadata."""
+def download_audio(url: str, output_path: str = ".") -> tuple[str, dict, str]:
+    """Download audio from YouTube video and return audio path + metadata + video_id."""
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': os.path.join(output_path, '%(id)s.%(ext)s'),
@@ -42,4 +46,4 @@ def download_audio(url: str, output_path: str = ".") -> tuple[str, dict]:
             'description': info.get('description', ''),
         }
     
-    return audio_file, metadata
+    return audio_file, metadata, video_id

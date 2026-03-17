@@ -115,6 +115,7 @@ summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --output summary.txt
 | `--output`, `-o` | Output file for summary |
 | `--whisper-model` | Whisper model size |
 | `--keep-audio` | Keep downloaded audio file after processing |
+| `--no-cache` | Disable transcript caching |
 
 ## Project Structure
 
@@ -134,6 +135,15 @@ summarizer/
 ├── .env.example            # Environment template
 ├── requirements.txt        # Python dependencies
 └── README.md
+```
+
+## Caching
+
+Transcripts are cached automatically to avoid re-transcribing the same video. Cache location: `~/.cache/yt-summarizer/`
+
+To disable caching:
+```bash
+summarizer "URL" --no-cache
 ```
 
 ## Development
