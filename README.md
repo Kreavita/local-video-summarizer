@@ -87,6 +87,16 @@ WHISPER_MODEL=base
 ```
 
 ## Usage
+### Web UI (Streamlit)
+
+```bash
+# Run summarizer without a url
+summarizer
+```
+
+http://localhost:12820 will open in your browser.
+
+### CLI
 
 ```bash
 # Basic usage - summarize a YouTube video
@@ -117,25 +127,6 @@ summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --output summary.txt
 | `--keep-audio` | Keep downloaded audio file after processing |
 | `--no-cache` | Disable transcript caching |
 
-## Project Structure
-
-```
-summarizer/
-├── src/
-│   └── summarizer/
-│       ├── __init__.py
-│       ├── cli.py          # CLI entry point
-│       ├── downloader.py   # YouTube audio downloader
-│       ├── transcriber.py  # Whisper transcription
-│       ├── summarizer.py   # Ollama summarization
-│       └── config.py       # Configuration handling
-├── setup.sh                # Virtual environment setup (Linux/macOS)
-├── setup.bat               # Virtual environment setup (Windows)
-├── pyproject.toml          # Package configuration
-├── .env.example            # Environment template
-├── requirements.txt        # Python dependencies
-└── README.md
-```
 
 ## Caching
 
@@ -145,14 +136,3 @@ To disable caching:
 ```bash
 summarizer "URL" --no-cache
 ```
-
-## Development
-
-Install development dependencies:
-```bash
-pip install -r requirements-dev.txt
-```
-
-## License
-
-MIT
