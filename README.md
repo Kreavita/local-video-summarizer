@@ -77,13 +77,16 @@ Create a `.env` file with the following variables:
 OLLAMA_BASE_URL=http://localhost:11434
 
 # Ollama model to use for summarization
-OLLAMA_MODEL=llama3.2
+OLLAMA_MODEL=qwen3.5:4b
 
 # Custom summary prompt (optional)
 SUMMARY_PROMPT=Provide a concise summary of the following transcript in bullet points:
 
-# Whisper model size (tiny, base, small, medium, large)
-WHISPER_MODEL=base
+# Context window size for Ollama (default: 32768)
+CONTEXT_WINDOW=32768
+
+# Whisper model size (tiny, base, small, medium, large-v3-turbo, large-v3, turbo)
+WHISPER_MODEL=large-v3-turbo
 ```
 
 ## Usage
@@ -109,7 +112,7 @@ python -m summarizer "https://www.youtube.com/watch?v=VIDEO_ID"
 summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --prompt "Summarize in German:"
 
 # Use a different Ollama model
-summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --model llama3.1
+summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --model qwen3.5:9b
 
 # Save output to file
 summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --output summary.txt
@@ -119,7 +122,7 @@ summarizer "https://www.youtube.com/watch?v=VIDEO_ID" --output summary.txt
 
 | Option | Description |
 |--------|-------------|
-| `url` | YouTube video URL (required) |
+| `url` | YouTube video URL (optional - launches web UI if omitted) |
 | `--prompt`, `-p` | Custom summary prompt |
 | `--model`, `-m` | Ollama model name |
 | `--output`, `-o` | Output file for summary |
