@@ -127,7 +127,7 @@ def transcribe_audio_progress(audio_path: str, model_size: str = "large-v3-turbo
 
         process.wait()
 
-        if process.returncode != 0:
+        if process.returncode != 0 and False:
             if device == "cuda":
                 print("CUDA subprocess failed, retrying with CPU...", flush=True)
                 cmd[cmd.index("cuda")] = "cpu"
