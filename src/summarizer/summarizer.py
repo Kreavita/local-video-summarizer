@@ -20,9 +20,10 @@ def format_metadata(metadata: dict) -> str:
     return '\n'.join(lines)
 
 
-def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = None) -> str:
+def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = None, context_window: int = None) -> str:
     """Send transcript to Ollama and get summary."""
     model = model or OLLAMA_MODEL
+    context_window = context_window or CONTEXT_WINDOW
     
     metadata_section = format_metadata(metadata) if metadata else ""
     
@@ -39,7 +40,7 @@ def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = N
             "stream": False,
             "keep_alive": 0,
             "options": {
-                "num_ctx": CONTEXT_WINDOW
+                "num_ctx": context_window
             }
         }
     )

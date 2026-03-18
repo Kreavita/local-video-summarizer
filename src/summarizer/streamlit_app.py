@@ -16,6 +16,7 @@ except ImportError:
 
 def run_ui():
     st.set_page_config(page_title="Video Summarizer", page_icon="🎬")
+    st.markdown("<style>.block-container {max-width: 900px;}</style>", unsafe_allow_html=True)
     st.title("🎬 Video Summarizer")
 
     url = st.text_input("YouTube URL or local file path", placeholder="https://youtube.com/watch?v=... or /path/to/video.mp4")
@@ -32,7 +33,18 @@ def run_ui():
     with col2:
         ollama_model = st.text_input("Ollama Model", value=OLLAMA_MODEL)
 
-    prompt = st.text_area("Summary Prompt", value=SUMMARY_PROMPT, height=80)
+        context_values = [4096, 6144, 8192, 12288, 16384, 24576, 32768, 49152, 65536, 98304, 131072, 196608, 262144, 393216, 524288, 786432, 1048576]
+        context_labels = ["4K", "6K", "8K", "12K", "16K", "24K", "32K", "48K", "64K", "96K", "128K", "192K", "256K", "384K", "512K", "768K", "1M"]
+
+        default_idx = context_values.index(32768) if 32768 in context_values else 3
+        context_window = st.select_slider(
+            "Ollama Context Window",
+            options=context_values,
+            value=context_values[default_idx],
+            format_func=lambda x: context_labels[context_values.index(x)]
+        )
+    
+    prompt = st.text_area("Summary Prompt", value=SUMMARY_PROMPT, height=120)
 
     if st.button("Summarize", type="primary"):
         if not url:
@@ -132,7 +144,7 @@ def run_ui():
                     with st.status("Generating summary with Ollama...", expanded=True) as status:
                         progress_bar = st.progress(0.0, text="Generating summary...")
                         try:
-                            summary = summarizer.summarize_text(transcript, prompt, ollama_model, metadata)
+                            summary = summarizer.summarize_text(transcript, prompt, ollama_model, metadata, context_window)
                             progress_bar.progress(1.0, text="Complete")
                             status.update(label="Summary generated", state="complete")
                         except Exception as e:
