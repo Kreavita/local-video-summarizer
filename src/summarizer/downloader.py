@@ -3,6 +3,7 @@ import os
 import subprocess
 import re
 import hashlib
+import datetime
 from pathlib import Path
 from typing import Generator
 
@@ -22,36 +23,14 @@ def is_local_path(path: str) -> bool:
     return False
 
 
-def extract_audio_from_file(file_path: str, output_path: str) -> tuple[str, dict]:
-    """Extract audio from a local file using ffmpeg (without conversion)."""
+def get_file_metadata(file_path: str) -> dict:
+    """Get metadata from a local file."""
     input_path = Path(file_path)
-    ext = input_path.suffix.lower()
     
     file_id = hashlib.md5(str(input_path.resolve()).encode()).hexdigest()[:12]
     
-    if ext in AUDIO_EXTENSIONS:
-        output_ext = ext
-    else:
-        output_ext = '.m4a'
-    
-    audio_file = os.path.join(output_path, f"{file_id}{output_ext}")
-    
-    cmd = [
-        'ffmpeg',
-        '-y',
-        '-i', str(input_path.resolve()),
-        '-vn',
-        '-c:a', 'copy',
-        audio_file
-    ]
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        raise RuntimeError(f"ffmpeg failed: {result.stderr}")
-    
-    if not os.path.exists(audio_file):
-        raise RuntimeError(f"Audio file was not created: {result.stderr}")
+    mtime = input_path.stat().st_mtime
+    creation_date = datetime.datetime.fromtimestamp(mtime).strftime('%Y%m%d')
     
     duration_cmd = [
         'ffprobe',
@@ -72,7 +51,7 @@ def extract_audio_from_file(file_path: str, output_path: str) -> tuple[str, dict
         'id': file_id,
         'title': input_path.stem,
         'channel': 'local',
-        'upload_date': '',
+        'upload_date': creation_date,
         'description': '',
         'duration': duration,
         'view_count': 0,
@@ -80,6 +59,38 @@ def extract_audio_from_file(file_path: str, output_path: str) -> tuple[str, dict
         'categories': [],
         'tags': [],
     }
+    
+    return metadata
+
+
+def extract_audio_from_file(file_path: str, output_path: str) -> tuple[str, dict]:
+    """Extract audio from a local file using ffmpeg (without conversion)."""
+    input_path = Path(file_path)
+    ext = input_path.suffix.lower()
+    metadata = get_file_metadata(file_path)
+    
+    output_ext = '.m4a'
+    if ext in AUDIO_EXTENSIONS:
+        output_ext = ext
+    
+    audio_file = os.path.join(output_path, f"{metadata['id']}{output_ext}")
+    
+    cmd = [
+        'ffmpeg',
+        '-y',
+        '-i', str(input_path.resolve()),
+        '-vn',
+        '-c:a', 'copy',
+        audio_file
+    ]
+    
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg failed: {result.stderr}")
+    
+    if not os.path.exists(audio_file):
+        raise RuntimeError(f"Audio file was not created: {result.stderr}")
     
     return audio_file, metadata
 
