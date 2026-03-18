@@ -5,12 +5,12 @@ import hashlib
 from pathlib import Path
 
 try:
-    from . import downloader, transcriber, summarizer
+    from . import downloader, transcriber, summarizer, transcript_fetcher
     from .config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
 except ImportError:
     import sys
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from summarizer import downloader, transcriber, summarizer
+    from summarizer import downloader, transcriber, summarizer, transcript_fetcher
     from summarizer.config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
 
 
@@ -118,21 +118,32 @@ def run_ui():
                                 transcript = re.sub(r'\[\d+\.\d+s - \d+\.\d+s\] ', '', transcript)
                             st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
                         else:
-                            with st.status("Downloading audio...", expanded=True) as status:
-                                progress_bar = st.progress(0, text="Starting download...")
-                                audio_path, metadata, download_progress = downloader.download_audio_progress(url, temp_dir)
-                                for p in download_progress:
-                                    progress_bar.progress(p["progress"], text=p["text"])
-                                status.update(label="Audio downloaded", state="complete")
+                            with st.status("Fetching YouTube transcript...", expanded=True) as status:
+                                transcript, status_msg = transcript_fetcher.fetch_youtube_transcript(url)
+                                if transcript:
+                                    transcriber.save_transcript(metadata['id'], transcript)
+                                    status.update(label=f"YouTube transcript: {status_msg}", state="complete")
+                                    st.info(f"📄 Using YouTube transcript: {status_msg} (length: {len(transcript)} chars)")
+                                else:
+                                    status.update(label=f"YouTube transcript unavailable: {status_msg}", state="error")
+                                    st.warning(f"YouTube transcript unavailable: {status_msg}")
+                            
+                            if not transcript:
+                                with st.status("Downloading audio...", expanded=True) as status:
+                                    progress_bar = st.progress(0, text="Starting download...")
+                                    audio_path, metadata, download_progress = downloader.download_audio_progress(url, temp_dir)
+                                    for p in download_progress:
+                                        progress_bar.progress(p["progress"], text=p["text"])
+                                    status.update(label="Audio downloaded", state="complete")
 
-                            with st.status("Transcribing with Whisper...", expanded=True) as status:
-                                progress_bar = st.progress(0, text="Loading model...")
-                                transcript, progress_gen = transcriber.transcribe_audio_progress(audio_path, whisper_model)
-                                for p in progress_gen:
-                                    progress_bar.progress(p["progress"], text=p["text"])
-                                with open(transcriber.get_cache_path(metadata['id']), encoding="utf-8") as f:
-                                    transcript = f.read()
-                                status.update(label=f"Transcription complete ({len(transcript)} chars)", state="complete")
+                                with st.status("Transcribing with Whisper...", expanded=True) as status:
+                                    progress_bar = st.progress(0, text="Loading model...")
+                                    transcript, progress_gen = transcriber.transcribe_audio_progress(audio_path, whisper_model)
+                                    for p in progress_gen:
+                                        progress_bar.progress(p["progress"], text=p["text"])
+                                    with open(transcriber.get_cache_path(metadata['id']), encoding="utf-8") as f:
+                                        transcript = f.read()
+                                    status.update(label=f"Transcription complete ({len(transcript)} chars)", state="complete")
 
                     if not include_timestamps:
                         import re

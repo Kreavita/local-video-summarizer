@@ -9,7 +9,7 @@ import subprocess
 import hashlib
 from pathlib import Path
 
-from . import downloader, transcriber, summarizer
+from . import downloader, transcriber, summarizer, transcript_fetcher
 from .config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
 
 RED = "\033[91m"
@@ -65,6 +65,15 @@ def main():
             if transcript:
                 print(f"Using cached transcript. (length: {len(transcript)})")
         
+        if not transcript and not is_local:
+            print("Trying to fetch YouTube transcript...")
+            transcript, status = transcript_fetcher.fetch_youtube_transcript(args.url)
+            if transcript:
+                print(f"{GREEN}Using YouTube transcript: {status}{RESET}")
+                transcriber.save_transcript(file_id, transcript)
+            else:
+                print(f"{YELLOW}YouTube transcript unavailable: {status}{RESET}")
+        
         if not transcript:
             if is_local:
                 print("Extracting audio from local file...")
@@ -80,8 +89,11 @@ def main():
             print("Transcribing with Whisper...")
             transcript = transcriber.transcribe_audio(audio_path, args.whisper_model)
             
-            transcriber.save_transcript(file_id, transcript)
-            print(f"{GREEN}Transcription complete and cached.{RESET}")
+            if not args.no_cache:
+                transcriber.save_transcript(file_id, transcript)
+                print(f"{GREEN}Transcription complete and cached.{RESET}")
+            else:
+                print(f"{GREEN}Transcription complete.{RESET}")
 
             if not args.keep_audio:
                 os.remove(audio_path)

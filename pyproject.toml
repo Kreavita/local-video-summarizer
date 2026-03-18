@@ -15,6 +15,7 @@ dependencies = [
     "python-dotenv",
     "requests",
     "streamlit",
+    "youtube-transcript-api",
 ]
 
 [project.scripts]
