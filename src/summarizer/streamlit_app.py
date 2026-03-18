@@ -71,9 +71,10 @@ def run_ui():
                         st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
                     else:
                         with st.status("Downloading audio...", expanded=True) as status:
-                            progress_bar = st.progress(50, text="Downloading...")
-                            audio_path, metadata = downloader.download_audio(url, temp_dir)
-                            progress_bar.progress(100, text="Download complete")
+                            progress_bar = st.progress(0, text="Starting download...")
+                            audio_path, metadata, download_progress = downloader.download_audio_progress(url, temp_dir)
+                            for p in download_progress:
+                                progress_bar.progress(p["progress"], text=p["text"])
                             status.update(label="Audio downloaded", state="complete")
 
                         with st.status("Transcribing with Whisper...", expanded=True) as status:
