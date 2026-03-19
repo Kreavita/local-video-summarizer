@@ -15,6 +15,7 @@ except ImportError:
 
 
 def run_ui():
+    import re
     st.set_page_config(page_title="Video Summarizer", page_icon="🎬")
     st.markdown("<style>.block-container {max-width: 900px;}</style>", unsafe_allow_html=True)
     st.title("🎬 Video Summarizer")
@@ -73,9 +74,10 @@ def run_ui():
                         
                         if transcript:
                             if not include_timestamps:
-                                import re
                                 transcript = re.sub(r'\[\d+\.\d+s - \d+\.\d+s\] ', '', transcript)
-                            st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
+                                
+                            with st.expander(f"📄 Using cached transcript (length: {len(transcript)} chars)"):
+                                st.markdown(f"```text\n{transcript}\n```")
                         else:
                             with st.status("Extracting audio...", expanded=True) as status:
                                 progress_bar = st.progress(0, text="Extracting audio...")
@@ -110,7 +112,7 @@ def run_ui():
 
                         col_thumb, col_info = st.columns([1, 1.2])
                         with col_thumb:
-                            st.image(thumbnail_url, use_container_width=True)
+                            st.image(thumbnail_url)
                         with col_info:
                             st.markdown(f"**{metadata.get('title', 'N/A')}**")
                             st.markdown(f"*{metadata.get('channel', 'N/A')}*")
@@ -122,9 +124,10 @@ def run_ui():
 
                         if transcript:
                             if not include_timestamps:
-                                import re
                                 transcript = re.sub(r'\[\d+\.\d+s - \d+\.\d+s\] ', '', transcript)
-                            st.info(f"📄 Using cached transcript (length: {len(transcript)} chars)")
+                            
+                            with st.expander(f"📄 Using Cached Transcript ({len(transcript)} chars)"):
+                                st.markdown(f"```text\n{transcript}\n```")
                         else:
                             youtube_tried = False
                             whisper_tried = False
@@ -158,6 +161,7 @@ def run_ui():
                                     with open(transcriber.get_cache_path(metadata['id']), encoding="utf-8") as f:
                                         transcript = f.read()
                                     status.update(label=f"Transcription complete ({len(transcript)} chars)", state="complete")
+                                    st.markdown(f"```text\n{transcript}\n```")
                             
                             if not transcript:
                                 if not youtube_tried and not whisper_tried:
