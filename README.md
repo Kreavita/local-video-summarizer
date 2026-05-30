@@ -1,43 +1,44 @@
 # Local Video Summarizer
 
-Tool that extracts audio from local files or downloads audio from YouTube videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp), transcribes using [faster-whisper](https://github.com/SYSTRAN/faster-whisper), and generates summaries via [Ollama](https://ollama.com/) API Request.
+Tool that extracts audio from local files or downloads audio from YouTube videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp), transcribes using [faster-whisper](https://github.com/SYSTRAN/faster-whisper), and generates summaries via an OpenAI-compatible API.
 
 ## Features
 
 - Download audio from YouTube videos ([yt-dlp](https://github.com/yt-dlp/yt-dlp))
 - Or use local video/audio files (mp4, mkv, mov, mp3, m4a, etc.) (requires [FFmpeg](https://ffmpeg.org/) in PATH)
 - Local transcription with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
-- Customizable summary prompts via [Ollama](https://ollama.com/)
+- Customizable summary prompts via OpenAI-compatible API
 - Beautiful Streamlit GUI or simple CLI interface
 
 ## Requirements
 
 - [Python](https://www.python.org/) 3.10+
 - [FFmpeg](https://ffmpeg.org/) (for audio processing)
-- [Ollama](https://ollama.com/) running locally or remote
+- An OpenAI-compatible API endpoint running (default: `http://localhost:8080/v1`)
 - *Optional for faster, GPU-accelerated Whisper: NVIDIA GPU with CUDA*
 
-## Ollama Installation
+## OpenAI-compatible API Setup
 
-Download and install from: [https://ollama.com/download](https://ollama.com/download)
+The summarizer connects to any OpenAI-compatible API at the configured base URL.
 
-### Pull the Model
+### Default endpoint
 
-The default model is `qwen3.5:4b`. Pull it with:
+The default endpoint is `http://localhost:8080/v1`. This could be:
+- A local inference server (e.g., vLLM, LocalAI, llama.cpp, Ollama with OpenAI compatibility)
+- A proxy like LiteLLM
+- Any other OpenAI-compatible service
 
-```bash
-ollama pull qwen3.5:4b
-```
+### Model auto-detection
 
-To use a different model, update `OLLAMA_MODEL` in your `.env` file.
+The model is auto-detected from the `/v1/models` endpoint on startup. The first available model is used by default. To override, set `OPENAI_MODEL` in your `.env` file.
 
-### Start Ollama
+### Start your API server
 
+If using Ollama with OpenAI compatibility:
 ```bash
 ollama serve
+# Accessible at http://localhost:11434/v1
 ```
-
-Ollama runs on `http://localhost:11434` by default.
 
 ## Installation
 
@@ -87,22 +88,22 @@ python check_cuda.py
 
 ```bash
 cp .env.example .env
-# Then update your .env to your Ollama endpoint and other settings
+# Then update your .env to your API endpoint and other settings
 ```
 
 Copy or create a `.env` file with the following variables:
 
 ```env
-# Ollama endpoint (default: http://localhost:11434)
-OLLAMA_BASE_URL=http://localhost:11434
+# OpenAI-compatible API endpoint (default: http://localhost:8080/v1)
+OPENAI_BASE_URL=http://localhost:8080/v1
 
-# Ollama model to use for summarization
-OLLAMA_MODEL=qwen3.5:4b
+# Model override (leave empty to auto-detect from /v1/models)
+OPENAI_MODEL=
 
 # Custom summary prompt (optional)
 SUMMARY_PROMPT=Provide a concise summary of the following transcript in bullet points:
 
-# Context window size for Ollama (default: 32768)
+# Max tokens for response (default: 32768)
 CONTEXT_WINDOW=32768
 
 # Whisper model size (tiny, base, small, medium, large-v3-turbo, large-v3, turbo)
@@ -136,7 +137,7 @@ summarizer "/path/to/audio.m4a"
 |--------|-------------|
 | `url` | YouTube video URL or local file path (optional - launches web UI if omitted) |
 | `--prompt`, `-p` | Custom summary prompt |
-| `--model`, `-m` | Ollama model name |
+| `--model`, `-m` | AI model name (auto-detected if not specified) |
 | `--output`, `-o` | Output file for summary |
 | `--whisper-model` | Whisper model size |
 | `--keep-audio` | Keep downloaded audio file after processing |

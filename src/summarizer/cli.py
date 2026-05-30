@@ -10,7 +10,7 @@ import hashlib
 from pathlib import Path
 
 from . import downloader, transcriber, summarizer, transcript_fetcher
-from .config import SUMMARY_PROMPT, WHISPER_MODEL, OLLAMA_MODEL
+from .config import SUMMARY_PROMPT, WHISPER_MODEL
 
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -24,10 +24,10 @@ def open_browser():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Summarize YouTube videos using Whisper and Ollama")
+    parser = argparse.ArgumentParser(description="Summarize YouTube videos using Whisper and AI")
     parser.add_argument("url", help="YouTube video URL or local file path (video/audio file)", nargs="?")
     parser.add_argument("--prompt", "-p", default=SUMMARY_PROMPT, help="Summary prompt")
-    parser.add_argument("--model", "-m", default=OLLAMA_MODEL, help="Ollama model")
+    parser.add_argument("--model", "-m", default=None, help="AI model (auto-detected from API if not specified)")
     parser.add_argument("--whisper-model", default=WHISPER_MODEL, help="Whisper model size (tiny, base, small, medium, large-v3-turbo, large-v3, turbo)")
     parser.add_argument("--output", "-o", help="Output file for summary")
     parser.add_argument("--keep-audio", action="store_true", help="Keep downloaded audio file after processing")
@@ -104,7 +104,7 @@ def main():
                 os.remove(audio_path)
                 print(f"Audio file removed.")
 
-        print("Generating summary with Ollama...")
+        print("Generating summary...")
         try:
             assert transcript is not None
             summary = summarizer.summarize_text(transcript, args.prompt, args.model, metadata)

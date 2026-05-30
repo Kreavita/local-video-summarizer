@@ -1,5 +1,25 @@
 import requests
-from .config import OLLAMA_BASE_URL, OLLAMA_MODEL, CONTEXT_WINDOW
+from .config import OPENAI_BASE_URL, CONTEXT_WINDOW
+
+_default_model = None
+
+
+def fetch_default_model():
+    global _default_model
+    if _default_model is not None:
+        return _default_model
+    from .config import OPENAI_MODEL
+    if OPENAI_MODEL:
+        _default_model = OPENAI_MODEL
+        return _default_model
+    response = requests.get(f"{OPENAI_BASE_URL}/models", timeout=10)
+    response.raise_for_status()
+    data = response.json()
+    models = data.get("data", [])
+    if not models:
+        raise RuntimeError("No models available at OpenAI-compatible endpoint")
+    _default_model = models[0]["id"]
+    return _default_model
 
 
 def format_metadata(metadata: dict) -> str:
@@ -7,7 +27,7 @@ def format_metadata(metadata: dict) -> str:
     upload_date = metadata.get('upload_date', '')
     if upload_date and len(upload_date) == 8:
         upload_date = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}"
-    
+
     lines = [
         "Video Information:",
         f"- Title: {metadata.get('title', 'N/A')}",
@@ -21,40 +41,45 @@ def format_metadata(metadata: dict) -> str:
 
 
 def summarize_text(text: str, prompt: str, model: str = None, metadata: dict = None, context_window: int = None) -> str:
-    """Send transcript to Ollama and get summary."""
-    model = model or OLLAMA_MODEL
-    context_window = context_window or CONTEXT_WINDOW
-    
+    """Send transcript to LLM and get summary."""
+    if not model:
+        model = fetch_default_model()
+    max_tokens = context_window or CONTEXT_WINDOW
+
     metadata_section = format_metadata(metadata) if metadata else ""
-    
+
     if metadata_section:
-        full_prompt = f"{prompt}\n\n{metadata_section}\n\nTranscript:\n{text}"
+        user_content = f"{metadata_section}\n\nTranscript:\n{text}"
     else:
-        full_prompt = f"{prompt}\n\n{text}"
+        user_content = f"Transcript:\n{text}"
 
     response = requests.post(
-        f"{OLLAMA_BASE_URL}/api/generate",
+        f"{OPENAI_BASE_URL}/chat/completions",
         json={
             "model": model,
-            "prompt": full_prompt,
-            "stream": False,
-            "keep_alive": 0,
-            "options": {
-                "num_ctx": context_window
-            }
+            "messages": [
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_content}
+            ],
+            "max_tokens": max_tokens,
+            "stream": False
         }
     )
 
     if not response.ok:
-        error_data = response.json()
-        error_msg = error_data.get("error", f"HTTP {response.status_code}: {response.text}")
-        raise RuntimeError(f"Ollama error: {error_msg}")
+        try:
+            error_data = response.json()
+            error_msg = error_data.get("error", {}).get("message", f"HTTP {response.status_code}: {response.text}")
+        except ValueError:
+            error_msg = f"HTTP {response.status_code}: {response.text}"
+        raise RuntimeError(f"API error: {error_msg}")
 
     result = response.json()
-    
-    if "error" in result:
-        raise RuntimeError(f"Ollama error: {result['error']}")
 
-    summary = result.get("response", "")
-    
+    choices = result.get("choices", [])
+    if not choices:
+        raise RuntimeError("API response contains no choices")
+
+    summary = choices[0].get("message", {}).get("content", "")
+
     return summary
